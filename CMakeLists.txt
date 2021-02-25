@@ -26,7 +26,8 @@ set (SYSTEMD_UNIT_DIR "/usr/lib/systemd/system/")
 
 # Set source and include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
-file (GLOB SOURCES "src/*.c")
+file (GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
+file (GLOB TEST_SOURCES "${CMAKE_SOURCE_DIR}/test/*.c")
 
 add_executable(duckydd ${SOURCES})
 
@@ -38,6 +39,9 @@ set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fstack-protector-strong")
 # Options
 option(ENABLE_XKB_EXTENSION "Enable linking to xkbcommon" ON)
 message("Compile xcbcommon support? ${ENABLE_XKB_EXTENSION}")
+
+option(ENABLE_TEST_COMPILATION "Enable the compilation of the test application" ON)
+message("Compile tests? ${ENABLE_TEST_COMPILATION}")
 
 # Run config script
 add_custom_target(
@@ -101,6 +105,30 @@ target_link_libraries(duckydd
 		${XKBCOMMON_X11_LIB}
 		${XCB_LIB}
 )
+endif()
+
+# Compile test application
+if(${ENABLE_TEST_COMPILATION})
+add_executable(duckydd_test ${SOURCES} ${TEST_SOURCES})
+add_dependencies(duckydd_test duckydd safestringlib safestringlib_download)
+
+# Link to libraries
+target_link_libraries(duckydd_test
+	PRIVATE
+		${UDEV_LIB}
+        ${MATH_LIB}
+		safestringlib
+)
+
+# Link to xkb specific libraries
+if(${ENABLE_XKB_EXTENSION})
+target_link_libraries(duckydd_test
+	PRIVATE
+		${XKBCOMMON_LIB}
+		${XKBCOMMON_X11_LIB}
+		${XCB_LIB}
+)
+endif()
 endif()
 
 # Install the release build
