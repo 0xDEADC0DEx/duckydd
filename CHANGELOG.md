@@ -4,6 +4,11 @@ Here all of the major changes are documented.
 This project adheres to [Semantic Versioning](http://semver.org/)
 and uses [Keep a Changelog](http://keepachangelog.com/) as a basis.
 
+## [Unreleased]
+#### Changed
+- Refactored the project
+
+
 ## [0.3.4] - 2021-02-08
 #### Fixed
 - Config reload via SIGHUP
