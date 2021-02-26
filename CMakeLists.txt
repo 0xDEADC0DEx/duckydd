@@ -109,6 +109,10 @@ endif()
 
 # Compile test application
 if(${ENABLE_TEST_COMPILATION})
+add_compile_definitions(RUN_TESTS)
+include_directories(${CMAKE_SOURCE_DIR}/test)
+find_library(CMOCKA_LIB libcmocka.so)
+
 add_executable(duckydd_test ${SOURCES} ${TEST_SOURCES})
 add_dependencies(duckydd_test duckydd safestringlib safestringlib_download)
 
@@ -118,6 +122,7 @@ target_link_libraries(duckydd_test
 		${UDEV_LIB}
         ${MATH_LIB}
 		safestringlib
+        ${CMOCKA_LIB}
 )
 
 # Link to xkb specific libraries
