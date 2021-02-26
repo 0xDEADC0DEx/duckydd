@@ -8,7 +8,6 @@
 #include <errno.h>
 
 #include "safe_lib.h"
-#include "mbuffer.h"
 #include "vars.h"
 
 #define LOG(loglvl, format, args...) _logger(loglvl, __func__, format, ##args) // print function name

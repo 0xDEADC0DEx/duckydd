@@ -7,9 +7,10 @@
 #include <xcb/xcb.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "io.h"
-#include "main.h"
 #include "vars.h"
+
+struct configInfo;
+struct deviceInfo;
 
 struct keyboardInfo {
     int outfd;
