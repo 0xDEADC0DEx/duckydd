@@ -1,19 +1,6 @@
 name: CMake
 
-on:
-  push:
-    tags-ignore:
-      - '*.*'
-    
-    paths-ignore:
-      - '*.md'
-
-  pull_request:
-    tags-ignore:
-      - '*.*'
-    
-    paths-ignore:
-      - '*.md'
+on: [push, pull_request]
 
 env:
     # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)

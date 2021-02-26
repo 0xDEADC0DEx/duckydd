@@ -7,20 +7,7 @@
 #
 name: "CodeQL"
 
-on:
-  push:
-    tags-ignore:
-      - '*.*'
-    
-    paths-ignore:
-      - '*.md'
-
-  pull_request:
-    tags-ignore:
-      - '*.*'
-    
-    paths-ignore:
-      - '*.md'
+on: [push, pull_request]
 
 jobs:
   analyze:
