@@ -109,7 +109,6 @@ endif()
 
 # Compile test application
 if(${ENABLE_TEST_COMPILATION})
-add_compile_definitions(RUN_TESTS)
 include_directories(${CMAKE_SOURCE_DIR}/test)
 find_library(CMOCKA_LIB libcmocka.so)
 
