@@ -13,6 +13,9 @@
 #include "signalhandler.h"
 #include "test_wrappers.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 void test_init_signalhandler(void **state)
 {
 	size_t i;
@@ -42,3 +45,5 @@ void test_init_signalhandler(void **state)
 
 	assert_int_equal(init_signalhandler(), 0);
 }
+
+#pragma GCC diagnostic pop

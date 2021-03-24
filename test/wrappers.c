@@ -36,7 +36,7 @@ pid_t __wrap_setsid(void)
 
 int __wrap_chdir(const char *path)
 {
-	check_expected(path);
+	check_expected_ptr(path);
 
 	return mock();
 }
