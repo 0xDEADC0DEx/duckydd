@@ -21,6 +21,7 @@
 #include "udev.h"
 #include "device.h"
 #include "test_wrappers.h"
+#include "logger.h"
 
 #if _POSIX_TIMERS <= 0
 #error "Can't use posix time functions!"
@@ -40,6 +41,8 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 	 struct keyboardInfo *kbd, struct managedBuffer *device, int *epollfd,
 	 struct epoll_event *udevevent)
 {
+	int rv;
+
 	// reset global variables
 	g_brexit = false;
 	g_reloadconfig = false;
@@ -48,14 +51,16 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 	m_init(device, sizeof(struct deviceInfo));
 
 	// read config
-	if (readconfig(configpath, config)) {
-		LOG(-1, "readconfig failed\n");
+	rv = readconfig(configpath, config);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 	// daemonize if supplied
 	if (g_daemonize) {
-		if (become_daemon(*config)) {
-			LOG(-1, "become_daemon failed!\n");
+		rv = become_daemon(*config);
+		if (rv) {
+			ERR(rv);
 			return -1;
 		}
 	}
@@ -65,27 +70,30 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 	setbuf(stderr, NULL);
 
 	// init signal handler
-	if (init_signalhandler(config)) {
-		LOG(-1, "init_sighandler failed\n");
+	rv = init_signalhandler(config);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 
 	// init the udev monitor
-	if (init_udev(udev)) {
-		LOG(-1, "init_udev failed\n");
+	rv = init_udev(udev);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 
 	// init keylogging if supplied
-	if (init_keylogging(NULL, kbd, config)) {
-		LOG(-1, "init_keylogging failed\n");
+	rv = init_keylogging(NULL, kbd, config);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 
 	// SETUP EPOLL
 	*epollfd = epoll_create(1); // size gets ignored since kernel 2.6.8
 	if (*epollfd < 0) {
-		ERR("epoll_create");
+		ERR(*epollfd);
 		return -1;
 	}
 
@@ -93,8 +101,9 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 	udevevent->events = EPOLLIN;
 	udevevent->data.fd = udev->udevfd;
 
-	if (epoll_ctl(*epollfd, EPOLL_CTL_ADD, udev->udevfd, udevevent)) {
-		ERR("epoll_ctl");
+	rv = epoll_ctl(*epollfd, EPOLL_CTL_ADD, udev->udevfd, udevevent);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 	LOG(0, "Startup done!\n");
@@ -104,6 +113,7 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 #ifndef RUN_UNIT_TESTS
 int main(int argc, char *argv[])
 {
+	int rv;
 	struct argInfo arg;
 	struct udevInfo udev;
 	struct configInfo config;
@@ -133,15 +143,17 @@ int main(int argc, char *argv[])
 	g_loglevel = 0;
 
 	// interpret args
-	if (handleargs(argc, argv, &arg)) {
-		LOG(-1, "handleargs failed!\n");
+	rv = handleargs(argc, argv, &arg);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 
 	// initalize the daemon contexts
-	if (init(arg.configpath, &udev, &config, &kbd, &device, &epollfd,
-		 &udevevent)) {
-		LOG(-1, "init failed\n");
+	rv = init(arg.configpath, &udev, &config, &kbd, &device, &epollfd,
+		  &udevevent);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 
@@ -158,7 +170,7 @@ int main(int argc, char *argv[])
 				readfds = 0;
 
 			} else {
-				ERR("epoll_wait");
+				ERR(readfds);
 				break;
 			}
 		}
@@ -169,11 +181,11 @@ int main(int argc, char *argv[])
 			if ((events[i].events & EPOLLIN) > 0) {
 				if (fd ==
 				    udev.udevfd) { // if a new event device has been added
-					if (handle_udevev(&device, &kbd,
-							  &config, &udev,
-							  epollfd)) {
-						LOG(-1,
-						    "handle_udevev failed!\n");
+					rv = handle_udevev(&device, &kbd,
+							   &config, &udev,
+							   epollfd);
+					if (rv) {
+						ERR(rv);
 					}
 
 				} else {
@@ -183,7 +195,7 @@ int main(int argc, char *argv[])
 					size = read(fd, &event,
 						    sizeof(struct input_event));
 					if (size < 0) {
-						ERR("read");
+						ERR(size);
 
 					} else {
 						// handle keyboard grabbing
@@ -247,9 +259,10 @@ int main(int argc, char *argv[])
 		if (g_reloadconfig) {
 			LOG(0, "Reloading config file...\n\n");
 
-			if (init(arg.configpath, &udev, &config, &kbd, &device,
-				 &epollfd, &udevevent)) {
-				LOG(-1, "init failed\n");
+			rv = init(arg.configpath, &udev, &config, &kbd, &device,
+				  &epollfd, &udevevent);
+			if (rv) {
+				ERR(rv);
 				return -1;
 			}
 
@@ -264,17 +277,19 @@ int main(int argc, char *argv[])
 		for (i = 0; i < device.size; i++) {
 			if (m_deviceInfo(&device)[i].fd != -1) {
 				LOG(1, "fd %d still open!\n", i);
-				if (deinit_device(&m_deviceInfo(&device)[i],
-						  &config, &kbd, epollfd)) {
-					LOG(-1, "deinit_device failed!\n");
+				rv = deinit_device(&m_deviceInfo(&device)[i],
+						   &config, &kbd, epollfd);
+				if (rv) {
+					ERR(rv);
 				}
 			}
 		}
 		m_free(&device);
 	}
 
-	if (close(epollfd)) {
-		ERR("close");
+	rv = close(epollfd);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 

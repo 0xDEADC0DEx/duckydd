@@ -17,6 +17,7 @@
 #include "io.h"
 #include "mbuffer.h"
 #include "safe_lib.h"
+#include "logger.h"
 
 #define PREFIX long_int
 #define T long int
@@ -77,6 +78,7 @@ static long int parse_long(const char input[], char **end)
 
 int readconfig(const char path[], struct configInfo *config)
 {
+	int rv;
 	int fd;
 
 	config->maxcount = -1;
@@ -88,7 +90,7 @@ int readconfig(const char path[], struct configInfo *config)
 	// open the config file if it has no lock on it
 	fd = open(path, O_RDWR); // open the config
 	if (fd < 0) {
-		ERR("open");
+		ERR(fd);
 		return -1;
 	}
 
@@ -101,19 +103,18 @@ int readconfig(const char path[], struct configInfo *config)
 		lock.l_start = 0;
 		lock.l_len = 0;
 
-		if (fcntl(fd, F_SETLK, &lock)) {
+		rv = fcntl(fd, F_SETLK, &lock);
+		if (rv) {
 			if (errno == EACCES || errno == EAGAIN) {
 				LOG(-1,
 				    "Another instance is probably running!\n");
 			}
-			ERR("fcntl");
+			ERR(rv);
 			return -2;
 		}
 	}
 
 	{
-		int rv = 1;
-
 		const size_t buffsize = 200;
 		char buff[buffsize];
 
@@ -293,48 +294,6 @@ int handleargs(int argc, char *argv[], struct argInfo *data)
 		return -1;
 	}
 	return 0;
-}
-
-void _logger(short loglevel, const char func[], const char format[], ...)
-{
-	// check for a format string bigger than the max
-	if (loglevel <= g_loglevel) {
-		if (strnlen(func, MAX_SIZE_FORMAT_STRING) <=
-			    MAX_SIZE_FORMAT_STRING &&
-		    strnlen(format, MAX_SIZE_FUNCTION_NAME) <=
-			    MAX_SIZE_FUNCTION_NAME) {
-			va_list args;
-			va_start(args, format);
-
-			char appended[MAX_SIZE_FORMAT_STRING +
-				      MAX_SIZE_FUNCTION_NAME];
-			char prefix;
-			FILE *fd;
-
-			// change prefix depending on loglevel
-			switch (loglevel) {
-			case -1:
-				prefix = '!';
-				fd = stderr;
-				break;
-
-			default:
-				prefix = '*';
-				fd = stdout;
-				break;
-			}
-
-			if (g_loglevel > 0) {
-				sprintf(appended, "[%c][%s] %s", prefix, func,
-					format);
-			} else {
-				sprintf(appended, "[%c] %s", prefix, format);
-			}
-			vfprintf(fd, appended, args);
-
-			va_end(args);
-		}
-	}
 }
 
 errno_t pathcat(char path1[], const char path2[])

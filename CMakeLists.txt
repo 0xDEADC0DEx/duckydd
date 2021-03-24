@@ -9,7 +9,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	message(STATUS "Setting build type to 'Release' as none was specified.")
 	set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-	
+
 	# Set the possible values of build type for cmake-gui
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
 endif ()
@@ -90,7 +90,7 @@ set_target_properties(safestringlib PROPERTIES
 add_dependencies(duckydd safestringlib safestringlib_download)
 
 # Link to libraries
-target_link_libraries(duckydd 
+target_link_libraries(duckydd
 	PRIVATE
 		${UDEV_LIB}
         ${MATH_LIB}
@@ -99,7 +99,7 @@ target_link_libraries(duckydd
 
 # Link to xkb specific libraries
 if(${ENABLE_XKB_EXTENSION})
-target_link_libraries(duckydd 
+target_link_libraries(duckydd
 	PRIVATE
 		${XKBCOMMON_LIB}
 		${XKBCOMMON_X11_LIB}
@@ -116,6 +116,12 @@ add_executable(duckydd_test ${APP_SOURCES} ${TEST_SOURCES})
 add_dependencies(duckydd_test duckydd safestringlib safestringlib_download)
 
 target_link_options (duckydd_test PRIVATE "-Wl,--wrap=sigaction")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=fork")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=setsid")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=umask")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=chdir")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=fclose")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=freopen")
 target_compile_definitions(duckydd_test PRIVATE RUN_UNIT_TESTS)
 
 # Link to libraries
@@ -156,4 +162,3 @@ install(FILES ${CMAKE_SOURCE_DIR}/duckydd.service
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ
         CONFIGURATIONS Release
         )
-

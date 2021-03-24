@@ -5,7 +5,8 @@
 
 #include <signal.h>
 
-#include "io.h"
+#include "vars.h"
+#include "logger.h"
 #include "test_wrappers.h"
 
 void handle_signal(int signal)
@@ -27,6 +28,7 @@ void handle_signal(int signal)
 
 int init_signalhandler()
 {
+	int rv;
 	struct sigaction action;
 
 	action.sa_handler = handle_signal;
@@ -34,25 +36,29 @@ int init_signalhandler()
 	sigemptyset(&action.sa_mask);
 
 	// register nonfatal handler
-	if (sigaction(SIGHUP, &action, NULL)) {
-		ERR("sigaction");
+	rv = sigaction(SIGHUP, &action, NULL);
+	if (rv) {
+		ERR(rv);
 		return -1;
 	}
 
-	if (sigaction(SIGTERM, &action, NULL)) {
-		ERR("sigaction");
+	rv = sigaction(SIGTERM, &action, NULL);
+	if (rv) {
+		ERR(rv);
 		return -2;
 	}
 
-	if (sigaction(SIGINT, &action, NULL)) {
-		ERR("sigaction");
+	rv = sigaction(SIGINT, &action, NULL);
+	if (rv) {
+		ERR(rv);
 		return -3;
 	}
 
 	// ignore sigchild
 	action.sa_handler = SIG_IGN;
-	if (sigaction(SIGCHLD, &action, NULL)) {
-		ERR("sigaction (SIGCHLD)");
+	rv = sigaction(SIGCHLD, &action, NULL);
+	if (rv) {
+		ERR(rv);
 		return -4;
 	}
 	return 0;

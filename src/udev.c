@@ -4,40 +4,42 @@
 #include "io.h"
 #include "udev.h"
 #include "safe_lib.h"
+#include "logger.h"
 
 int has_tty(struct udevInfo udev)
 {
+	int rv;
 	int err = 0;
 	struct udev_enumerate *en;
 	struct udev_list_entry *le;
 
 	en = udev_enumerate_new(udev.udev);
 	if (en == NULL) {
-		LOG(-1, "udev_enumerate_new failed\n");
+		ERR(en);
 		err = -1;
 		goto error_exit;
 	}
 
 	// match to the name starting with tty
-	if (udev_enumerate_add_match_subsystem(en, "tty") < 0) {
-		LOG(-1, "udev_enumerate_add_match_subsystem failed\n");
+	rv = udev_enumerate_add_match_subsystem(en, "tty");
+	if (rv < 0) {
+		ERR(rv);
 		err = -2;
 		goto error_exit;
 	}
 
 	// match to major and minor number of the device
-	if (udev_enumerate_add_match_property(
-		    en, "MAJOR",
-		    udev_device_get_property_value(udev.dev, "MAJOR")) < 0) {
-		LOG(-1, "udev_enumerate_add_match_property failed\n");
+	rv = udev_enumerate_add_match_property(
+		en, "MAJOR", udev_device_get_property_value(udev.dev, "MAJOR"));
+	if (rv < 0) {
 		err = -3;
 		goto error_exit;
 	}
 
-	if (udev_enumerate_add_match_property(
-		    en, "MINOR",
-		    udev_device_get_property_value(udev.dev, "MINOR")) < 0) {
-		LOG(-1, "udev_enumerate_add_match_property failed\n");
+	rv = udev_enumerate_add_match_property(
+		en, "MINOR", udev_device_get_property_value(udev.dev, "MINOR"));
+	if (rv < 0) {
+		ERR(rv);
 		err = -4;
 		goto error_exit;
 	}
@@ -67,36 +69,39 @@ error_exit:
 
 int init_udev(struct udevInfo *udev)
 {
+	int rv;
+
 	udev->udev = udev_new();
 	if (udev->udev == NULL) {
-		LOG(-1, "udev_new failed\n");
+		ERR(udev->udev);
 		return -1;
 	}
 
 	// create a new monitor from the context
 	udev->mon = udev_monitor_new_from_netlink(udev->udev, "udev");
 	if (udev->mon == NULL) {
-		LOG(-1, "udev_monitor_new_from_netlink failed\n");
+		ERR(udev->mon);
 		return -2;
 	}
 
 	// match only input devices
-	if (udev_monitor_filter_add_match_subsystem_devtype(udev->mon, "input",
-							    NULL) < 0) {
-		LOG(-1,
-		    "udev_monitor_filter_add_match_subsystem_devtype failed (input)\n");
+	rv = udev_monitor_filter_add_match_subsystem_devtype(udev->mon, "input",
+							     NULL);
+	if (rv < 0) {
+		ERR(rv);
 		return -3;
 	}
 
 	// start receiving events
-	if (udev_monitor_enable_receiving(udev->mon) < 0) {
-		LOG(-1, "udev_monitor_enable_receiving failed\n");
+	rv = udev_monitor_enable_receiving(udev->mon);
+	if (rv < 0) {
+		ERR(rv);
 		return -4;
 	}
 
 	udev->udevfd = udev_monitor_get_fd(udev->mon);
 	if (udev->udevfd == -1) {
-		LOG(-1, "udev_monitor_get_fd failed\n");
+		ERR(udev->udevfd);
 		return -5;
 	}
 	return 0;

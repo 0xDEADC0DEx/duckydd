@@ -10,9 +10,6 @@
 #include "safe_lib.h"
 #include "vars.h"
 
-#define LOG(loglvl, format, args...) _logger(loglvl, __func__, format, ##args) // print function name
-#define ERR(function) _logger(-1, __func__, "%s has failed (%d) -> %s (err: %d)\n", function, errno, strerror(errno))
-
 // holds data read from the config file (mainly used by readconfig)
 struct configInfo {
     long int maxcount;
@@ -35,7 +32,6 @@ int handleargs(int argc, char* argv[], struct argInfo* data);
 
 // internal logger function
 char* binexpand(uint8_t bin, size_t size);
-void _logger(short loglevel, const char func[], const char format[], ...);
 
 errno_t pathcat(char path1[], const char path2[]);
 errno_t pathcpy(char path1[], const char path2[]);

@@ -19,6 +19,7 @@
 #include "logkeys.h"
 #include "mbuffer.h"
 #include "device.h"
+#include "logger.h"
 
 #define PREFIX char
 #define T char
@@ -74,6 +75,7 @@ static int open_console0()
 static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 			  struct configInfo *config)
 {
+	int rv;
 	int err = 0;
 
 	// initalize x keymap
@@ -82,7 +84,7 @@ static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 	// create a new context
 	kbd->x.ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	if (!kbd->x.ctx) {
-		LOG(-1, "xkb_context_new failed!\n");
+		ERR(kbd->x.ctx);
 		err = -1;
 		goto error_exit;
 	}
@@ -90,12 +92,13 @@ static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 	// connect to the x server
 	kbd->x.con = xcb_connect(screen, NULL);
 	if (kbd->x.con == NULL) {
-		LOG(-1, "xcb_connect failed!\n");
+		ERR(kbd->x.con);
 		err = -2;
 		goto error_exit;
 	}
 
-	if (xcb_connection_has_error(kbd->x.con)) {
+	rv = xcb_connection_has_error(kbd->x.con);
+	if (rv) {
 		LOG(-1, "xcb_connection_has_error failed!\n");
 		err = -3;
 		goto error_exit;
@@ -105,13 +108,13 @@ static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 	{
 		uint16_t major_xkb, minor_xkb;
 		uint8_t event_out, error_out;
-		if (!xkb_x11_setup_xkb_extension(
-			    kbd->x.con, XKB_X11_MIN_MAJOR_XKB_VERSION,
-			    XKB_X11_MIN_MINOR_XKB_VERSION, 0, &major_xkb,
-			    &minor_xkb, &event_out, &error_out)) {
-			LOG(-1,
-			    "xkb_x11_setup_xkb_extension failed with %d! -> major_xkb %d minor_xkb %d\n",
-			    error_out, major_xkb, minor_xkb);
+		rv = xkb_x11_setup_xkb_extension(kbd->x.con,
+						 XKB_X11_MIN_MAJOR_XKB_VERSION,
+						 XKB_X11_MIN_MINOR_XKB_VERSION,
+						 0, &major_xkb, &minor_xkb,
+						 &event_out, &error_out);
+		if (!rv) {
+			ERR(rv);
 			err = -4;
 			goto error_exit;
 		}
@@ -120,7 +123,7 @@ static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 	// get device id of the core x keyboard
 	kbd->x.device_id = xkb_x11_get_core_keyboard_device_id(kbd->x.con);
 	if (kbd->x.device_id == -1) {
-		LOG(-1, "xkb_x11_get_core_keyboard_device_id failed!\n");
+		ERR(kbd->x.device_id);
 		err = -5;
 		goto error_exit;
 	}
@@ -131,7 +134,7 @@ static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 					       kbd->x.device_id,
 					       XKB_KEYMAP_COMPILE_NO_FLAGS);
 	if (!kbd->x.keymap) {
-		LOG(-1, "xkb_x11_keymap_new_from_device failed!\n");
+		ERR(kbd->x.keymap);
 		err = -6;
 		goto error_exit;
 	}
@@ -155,6 +158,7 @@ error_exit:
 
 static int load_kernel_keymaps(const int fd, struct keyboardInfo *kbd)
 {
+	int rv;
 	size_t i, k;
 
 	// load scancode to keycode table
@@ -164,8 +168,9 @@ static int load_kernel_keymaps(const int fd, struct keyboardInfo *kbd)
 		temp.scancode = i;
 		temp.keycode = 0;
 
-		if (ioctl(fd, KDGETKEYCODE, &temp)) {
-			ERR("ioctl");
+		rv = ioctl(fd, KDGETKEYCODE, &temp);
+		if (rv) {
+			ERR(rv);
 			return -1;
 		}
 
@@ -181,7 +186,8 @@ static int load_kernel_keymaps(const int fd, struct keyboardInfo *kbd)
 			temp.kb_index = k;
 			temp.kb_value = 0;
 
-			if (ioctl(fd, KDGKBENT, &temp)) {
+			rv = ioctl(fd, KDGKBENT, &temp);
+			if (rv) {
 				ERR("ioctl");
 				return -2;
 			}
@@ -197,7 +203,8 @@ static int load_kernel_keymaps(const int fd, struct keyboardInfo *kbd)
 		temp.kb_func = i;
 		temp.kb_string[0] = '\0';
 
-		if (ioctl(fd, KDGKBSENT, &temp)) {
+		rv = ioctl(fd, KDGKBSENT, &temp);
+		if (rv) {
 			ERR("ioctl");
 			return -3;
 		}
@@ -215,6 +222,7 @@ static int interpret_keycode(struct managedBuffer *buff,
 			     struct keyboardInfo *kbd, unsigned int code,
 			     uint8_t value)
 {
+	int rv;
 	uint16_t modmask = 0;
 
 	LOG(2, "keycode:%d value:%d - typ:%d val:%d\n", code, value, KTYP(code),
@@ -282,10 +290,10 @@ static int interpret_keycode(struct managedBuffer *buff,
 				LOG(1, "actioncode:%d -> %c\n", actioncode,
 				    KVAL(actioncode));
 
-				if (m_append_member_char(buff,
-							 KVAL(actioncode))) {
-					LOG(-1,
-					    "m_append_member_char failed!\n");
+				rv = m_append_member_char(buff,
+							  KVAL(actioncode));
+				if (rv) {
+					ERR(rv);
 				}
 
 			} else { // TODO UNTESTED
@@ -303,14 +311,13 @@ static int interpret_keycode(struct managedBuffer *buff,
 				     i++) { // write unicode character utf-8 encoded into the logbuffer
 					limit |= 0xff << i;
 					if (code > limit) {
-						if (m_append_member_char(
-							    buff,
-							    actioncode &
-								    (0xff
-								     << (7 *
-									 i)))) {
-							LOG(-1,
-							    "m_append_member_char failed!\n");
+						rv = m_append_member_char(
+							buff,
+							actioncode &
+								(0xff
+								 << (7 * i)));
+						if (rv) {
+							ERR(rv);
 						}
 					}
 				}
@@ -326,13 +333,15 @@ static int interpret_keycode(struct managedBuffer *buff,
 int init_keylogging(const char input[], struct keyboardInfo *kbd,
 		    struct configInfo *config)
 {
+	int rv;
 	int err = 0;
 
 	// setup x keymaps
 	if (config->xkeymaps) {
 #ifdef ENABLE_XKB_EXTENSION
-		if (load_x_keymaps(input, kbd, config)) {
-			LOG(-1, "init_xkeylogging failed!\n");
+		rv = load_x_keymaps(input, kbd, config);
+		if (rv) {
+			ERR(rv);
 		}
 #else
 		LOG(0, "The daemon was compiled without xkb support!\n");
@@ -346,6 +355,7 @@ int init_keylogging(const char input[], struct keyboardInfo *kbd,
 		// get a file descriptor to console 0
 		fd = open_console0();
 		if (fd < 0) {
+			ERR(fd);
 			LOG(-1,
 			    "Failed to open a file descriptor to a vaild console!\n");
 			err = -1;
@@ -353,8 +363,9 @@ int init_keylogging(const char input[], struct keyboardInfo *kbd,
 		}
 
 		// load keytable / accent table / and scancode translation table
-		if (load_kernel_keymaps(fd, kbd)) {
-			LOG(-1, "init_kernelkeylogging failed!\n");
+		rv = load_kernel_keymaps(fd, kbd);
+		if (rv) {
+			ERR(rv);
 			err = -2;
 			goto error_exit;
 		}
@@ -416,12 +427,15 @@ static inline void timespec_diff(struct timespec *result, struct timespec *a,
 
 static int check_if_evil(struct deviceInfo *device, struct configInfo *config)
 {
+	int rv;
+
 	// increment currdiff until wraparound
 	if (device->timediff.currdiff < device->timediff.strokesdiff.size) {
 		struct timespec temp;
 
 		// get current time
-		if (clock_gettime(CLOCK_REALTIME, &temp)) {
+		rv = clock_gettime(CLOCK_REALTIME, &temp);
+		if (rv) {
 			ERR("clock_gettime");
 			return -1;
 		}
@@ -482,6 +496,7 @@ static int check_if_evil(struct deviceInfo *device, struct configInfo *config)
 int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 	   struct input_event event, struct configInfo *config)
 {
+	int rv;
 #ifdef ENABLE_XKB_EXTENSION
 	// if xkbcommon lib has initalized
 	if (config->xkeymaps) {
@@ -520,11 +535,11 @@ int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 				xkb_state_key_get_utf8(device->xstate, keycode,
 						       buffer, size);
 
-				if (m_append_array_char(
-					    &device->devlog, buffer,
-					    size - 1)) { // dont copy \0
-					LOG(-1,
-					    "append_mbuffer_array_char failed!\n");
+				rv = m_append_array_char(&device->devlog,
+							 buffer, size - 1);
+				if (rv) { // dont copy \0
+					ERR(rv);
+					free(buffer);
 					return -2;
 				}
 				free(buffer);
@@ -540,16 +555,18 @@ int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 
 	if (!config->xkeymaps) {
 		// interpret the keycode using the kernel keytable
-		if (interpret_keycode(&device->devlog, device, kbd, event.code,
-				      event.value)) {
-			LOG(-1, "codetoksym failed!\n");
+		rv = interpret_keycode(&device->devlog, device, kbd, event.code,
+				       event.value);
+		if (rv) {
+			ERR(rv);
 			return -3;
 		}
 	}
 
 	// check if the keystrokes are typed in a manner not typical to human typing
-	if (check_if_evil(device, config)) {
-		LOG(-1, "check_if_evil failed\n");
+	rv = check_if_evil(device, config);
+	if (rv) {
+		ERR(rv);
 		return -4;
 	}
 
@@ -559,9 +576,10 @@ int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 			LOG(2, "Writing devlog to logfile\n");
 
 			// write keylog to the log file
-			if (write(kbd->outfd, device->devlog.b,
-				  device->devlog.size) < 0) {
-				ERR("write");
+			rv = write(kbd->outfd, device->devlog.b,
+				   device->devlog.size);
+			if (rv < 0) {
+				ERR(rv);
 			}
 		}
 		m_realloc(&device->devlog, 0);

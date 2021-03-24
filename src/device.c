@@ -15,6 +15,7 @@
 #include "device.h"
 #include "logkeys.h"
 #include "config.h"
+#include "logger.h"
 
 #define PREFIX char
 #define T char
@@ -31,18 +32,20 @@
 int deinit_device(struct deviceInfo *device, struct configInfo *config,
 		  struct keyboardInfo *kbd, const int epollfd)
 {
+	int rv;
 	int err = 0;
 
 	if (device->fd != -1) {
-		if (epoll_ctl(epollfd, EPOLL_CTL_DEL, device->fd,
-			      NULL)) { // unregister the fd
-			ERR("epoll_ctl");
+		rv = epoll_ctl(epollfd, EPOLL_CTL_DEL, device->fd, NULL);
+		if (rv) { // unregister the fd
+			ERR(rv);
 			err = -1;
 			goto error_exit;
 		}
 
-		if (close(device->fd)) { // close the fd
-			ERR("close");
+		rv = close(device->fd);
+		if (rv) { // close the fd
+			ERR(rv);
 			err = -2;
 			goto error_exit;
 		}
@@ -61,15 +64,17 @@ int deinit_device(struct deviceInfo *device, struct configInfo *config,
 
 			LOG(2, "Writing devlog to logfile\n");
 
-			if (m_append_array_char(&device->devlog, temp,
-						strnlen_s(temp, 100))) {
-				LOG(-1, "append_mbuffer_array_char failed!\n");
+			rv = m_append_array_char(&device->devlog, temp,
+						 strnlen_s(temp, 100));
+			if (rv) {
+				ERR(rv);
 			}
 
 			// write keylog to the log file
-			if (write(kbd->outfd, device->devlog.b,
-				  device->devlog.size) < 0) {
-				ERR("write");
+			rv = write(kbd->outfd, device->devlog.b,
+				   device->devlog.size);
+			if (rv < 0) {
+				ERR(rv);
 			}
 		}
 	}
@@ -87,8 +92,9 @@ int deinit_device(struct deviceInfo *device, struct configInfo *config,
 	return err;
 
 error_exit:
-	if (close(device->fd)) {
-		LOG(-1, "close failed\n");
+	rv = close(device->fd);
+	if (rv) {
+		ERR(rv);
 	}
 	return err;
 }
@@ -114,11 +120,13 @@ int search_fd(struct managedBuffer *device, const char location[])
 int remove_fd(struct managedBuffer *device, struct configInfo *config,
 	      struct keyboardInfo *kbd, const int epollfd, const int fd)
 {
+	int rv;
+
 	if (fd > -1) {
-		if (deinit_device(&m_deviceInfo(device)[fd], config, kbd,
-				  epollfd)) {
-			LOG(-1,
-			    "deinit_device failed! Memory leak possible!\n");
+		rv = deinit_device(&m_deviceInfo(device)[fd], config, kbd,
+				   epollfd);
+		if (rv) {
+			ERR(rv);
 			return -1;
 		}
 
@@ -138,18 +146,19 @@ int remove_fd(struct managedBuffer *device, struct configInfo *config,
 				bool failed = false;
 
 				for (i = bigsize; i < device->size; i++) {
-					if (deinit_device(
-						    &m_deviceInfo(device)[i],
-						    config, kbd, epollfd)) {
-						LOG(-1,
-						    "deinit_device failed! Memory leak possible!\n");
+					rv = deinit_device(
+						&m_deviceInfo(device)[i],
+						config, kbd, epollfd);
+					if (rv) {
+						ERR(rv);
 						failed = true;
 					}
 				}
 
 				if (!failed) {
-					if (m_realloc(device, bigsize)) {
-						LOG(-1, "m_realloc failed!\n");
+					rv = m_realloc(device, bigsize);
+					if (rv) {
+						ERR(rv);
 					}
 				}
 			}
@@ -168,6 +177,7 @@ int remove_fd(struct managedBuffer *device, struct configInfo *config,
 int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 	   struct configInfo *config, const int epollfd, const char location[])
 {
+	int rv;
 	int err = 0;
 	int fd;
 
@@ -176,7 +186,7 @@ int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 	// open a fd to the devnode
 	fd = open(location, O_RDONLY | O_NONBLOCK);
 	if (fd < 0) {
-		LOG(-1, "open failed\n");
+		ERR(fd);
 		err = -1;
 		goto error_exit;
 	}
@@ -187,8 +197,9 @@ int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 		size_t prevsize;
 
 		prevsize = device->size;
-		if (m_realloc(device, fd + 1)) {
-			LOG(-1, "m_realloc failed!\n");
+		rv = m_realloc(device, fd + 1);
+		if (rv) {
+			ERR(rv);
 			err = -2;
 			goto error_exit;
 		}
@@ -220,8 +231,7 @@ int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 							      kbd->x.con,
 							      kbd->x.device_id);
 			if (!m_deviceInfo(device)[fd].xstate) {
-				LOG(-1,
-				    "xkb_x11_state_new_from_device failed!\n");
+				ERR(m_deviceInfo(device)[fd].xstate);
 				err = -3;
 				goto error_exit;
 			}
@@ -229,9 +239,10 @@ int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 #endif
 
 		// allocate the array
-		if (m_realloc(&m_deviceInfo(device)[fd].timediff.strokesdiff,
-			      6)) {
-			LOG(-1, "m_realloc failed!\n");
+		rv = m_realloc(&m_deviceInfo(device)[fd].timediff.strokesdiff,
+			       6);
+		if (rv) {
+			ERR(rv);
 			err = -4;
 			goto error_exit;
 		}
@@ -253,8 +264,9 @@ int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 			event.events = EPOLLIN;
 			event.data.fd = fd;
 
-			if (epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event)) {
-				ERR("epoll_ctl");
+			rv = epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
+			if (rv) {
+				ERR(rv);
 				err = -5;
 				goto error_exit;
 			}
@@ -279,6 +291,7 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 		  struct configInfo *config, struct udevInfo *udev,
 		  const int epollfd)
 {
+	int rv;
 	int err = 0;
 	const char *devnode;
 	const char *action;
@@ -286,7 +299,7 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 	// get a device context from the monitor
 	udev->dev = udev_monitor_receive_device(udev->mon);
 	if (udev->dev == NULL) {
-		LOG(-1, "udev_monitor_receive_device failed\n");
+		ERR(udev->dev);
 		err = -1;
 		goto error_exit;
 	}
@@ -312,7 +325,7 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 					m_deviceInfo(device)[fd].score++;
 				}
 			} else {
-				LOG(-1, "add_fd failed\n");
+				ERR(fd);
 				err = -2;
 				goto error_exit;
 			}
@@ -324,9 +337,10 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 			// search for the fd and remove it if possible
 			fd = search_fd(device, devnode);
 			if (fd >= 0) {
-				if (remove_fd(device, config, kbd, epollfd,
-					      fd)) {
-					LOG(-1, "remove_fd failed\n");
+				rv = remove_fd(device, config, kbd, epollfd,
+					       fd);
+				if (rv) {
+					ERR(rv);
 					err = -3;
 					goto error_exit;
 				}
