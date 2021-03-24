@@ -1,11 +1,12 @@
 
-#include <stdbool.h>
 #include <string.h>
 
 #include <errno.h>
+
 #include <signal.h>
 
 #include "io.h"
+#include "test_wrappers.h"
 
 void handle_signal(int signal)
 {
@@ -54,6 +55,5 @@ int init_signalhandler()
 		ERR("sigaction (SIGCHLD)");
 		return -4;
 	}
-
 	return 0;
 }

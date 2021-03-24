@@ -20,6 +20,7 @@
 #include "signalhandler.h"
 #include "udev.h"
 #include "device.h"
+#include "test_wrappers.h"
 
 #if _POSIX_TIMERS <= 0
 #error "Can't use posix time functions!"
@@ -100,6 +101,7 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 	return 0;
 }
 
+#ifndef RUN_UNIT_TESTS
 int main(int argc, char *argv[])
 {
 	struct argInfo arg;
@@ -283,3 +285,11 @@ int main(int argc, char *argv[])
 	LOG(0, "All exit routines done!\n");
 	return 0;
 }
+#else
+int unit_test_main();
+
+int main()
+{
+	return unit_test_main();
+}
+#endif

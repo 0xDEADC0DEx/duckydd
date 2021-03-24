@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18..3.19)
+cmake_minimum_required(VERSION 3.18)
 
 # Enable compilation commands file
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -25,16 +25,16 @@ set (DAEMON_CONF_DIR "/etc/duckydd")
 set (SYSTEMD_UNIT_DIR "/usr/lib/systemd/system/")
 
 # Set source and include directories
-include_directories(${CMAKE_SOURCE_DIR}/include)
-file (GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
+include_directories("${CMAKE_SOURCE_DIR}/include")
+file (GLOB APP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
 file (GLOB TEST_SOURCES "${CMAKE_SOURCE_DIR}/test/*.c")
 
-add_executable(duckydd ${SOURCES})
+add_executable(duckydd ${APP_SOURCES})
 
 # Set compile flags
-set (CMAKE_C_FLAGS_DEBUG "-g3")
+set (CMAKE_C_FLAGS_DEBUG "-g")
 set (CMAKE_C_FLAGS_RELEASE "-O3 -fpie -D_FORTIFY_SOURCE=2")
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fstack-protector-strong")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fstack-protector-strong")
 
 # Options
 option(ENABLE_XKB_EXTENSION "Enable linking to xkbcommon" ON)
@@ -109,11 +109,14 @@ endif()
 
 # Compile test application
 if(${ENABLE_TEST_COMPILATION})
-include_directories(${CMAKE_SOURCE_DIR}/test)
+include_directories("${CMAKE_SOURCE_DIR}/test")
 find_library(CMOCKA_LIB libcmocka.so)
 
-add_executable(duckydd_test ${SOURCES} ${TEST_SOURCES})
+add_executable(duckydd_test ${APP_SOURCES} ${TEST_SOURCES})
 add_dependencies(duckydd_test duckydd safestringlib safestringlib_download)
+
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=sigaction")
+target_compile_definitions(duckydd_test PRIVATE RUN_UNIT_TESTS)
 
 # Link to libraries
 target_link_libraries(duckydd_test
