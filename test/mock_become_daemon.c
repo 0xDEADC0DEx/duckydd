@@ -121,3 +121,21 @@ void test_become_daemon_fail(void **state)
 		assert_int_equal(become_daemon(config), EXIT_FAILURE);
 	}
 }
+
+void test_become_daemon_success(void **state)
+{
+	struct configInfo config;
+
+	init_struct(&config);
+
+	will_return(__wrap_fork, 0);
+	will_return(__wrap_setsid, 0);
+	will_return(__wrap_fork, 0);
+	will_return(__wrap_chdir, 0);
+	will_return(__wrap_fclose, 0);
+	will_return(__wrap_fclose, 0);
+	will_return(__wrap_fclose, 0);
+	will_return(__wrap_freclose, stdout);
+	will_return(__wrap_freclose, stderr);
+	assert_int_equal(become_daemon(config), EXIT_SUCCESS);
+}
