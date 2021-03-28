@@ -1,5 +1,6 @@
 # Ducky Detector Daemon
 This daemon protect aims at detecting and protecting against any rubberducky attacks.
+
 Currently tested against: Maldruino elite / Bash Bunny
 
 ![CMake](https://github.com/0xDEADC0DEx/duckydd/workflows/CMake/badge.svg?branch=master)
