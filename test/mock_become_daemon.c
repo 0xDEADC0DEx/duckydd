@@ -38,7 +38,7 @@ void test_become_daemon_fail(void **state)
 	{
 		will_return(__wrap_fork, -1);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		assert_int_equal(become_daemon(config), 1);
 	}
 
 	// fail at setsid
@@ -46,7 +46,7 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_fork, 0);
 		will_return(__wrap_setsid, -1);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		assert_int_equal(become_daemon(config), 2);
 	}
 
 	// fail at second fork
@@ -55,7 +55,7 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_setsid, 0);
 		will_return(__wrap_fork, -1);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		assert_int_equal(become_daemon(config), 3);
 	}
 
 	// fail at chdir
@@ -64,10 +64,10 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_setsid, 0);
 		will_return(__wrap_fork, 0);
 
-		expect_value(__wrap_chdir, path, '/');
+		expect_string(__wrap_chdir, path, "/");
 		will_return(__wrap_chdir, -1);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		assert_int_equal(become_daemon(config), 4);
 	}
 
 	// fail at first fclose
@@ -76,43 +76,16 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_setsid, 0);
 		will_return(__wrap_fork, 0);
 
-		expect_value(__wrap_chdir, path, '/');
+		expect_string(__wrap_chdir, path, "/");
 		will_return(__wrap_chdir, 0);
 
+		expect_value(__wrap_umask, mask, 0);
+		will_return(__wrap_umask, 0);
+
+		expect_value(__wrap_fclose, fp, stdin);
 		will_return(__wrap_fclose, -1);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
-	}
-
-	// fail at second fclose
-	{
-		will_return(__wrap_fork, 0);
-		will_return(__wrap_setsid, 0);
-		will_return(__wrap_fork, 0);
-
-		expect_value(__wrap_chdir, path, '/');
-		will_return(__wrap_chdir, 0);
-
-		will_return(__wrap_fclose, 0);
-		will_return(__wrap_fclose, -1);
-
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
-	}
-
-	// fail at third fclose
-	{
-		will_return(__wrap_fork, 0);
-		will_return(__wrap_setsid, 0);
-		will_return(__wrap_fork, 0);
-
-		expect_value(__wrap_chdir, path, '/');
-		will_return(__wrap_chdir, 0);
-
-		will_return(__wrap_fclose, 0);
-		will_return(__wrap_fclose, 0);
-		will_return(__wrap_fclose, -1);
-
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		assert_int_equal(become_daemon(config), 5);
 	}
 
 	// fail at first freopen
@@ -121,16 +94,21 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_setsid, 0);
 		will_return(__wrap_fork, 0);
 
-		expect_value(__wrap_chdir, path, '/');
+		expect_string(__wrap_chdir, path, "/");
 		will_return(__wrap_chdir, 0);
 
-		will_return(__wrap_fclose, 0);
-		will_return(__wrap_fclose, 0);
+		expect_value(__wrap_umask, mask, 0);
+		will_return(__wrap_umask, 0);
+
+		expect_value(__wrap_fclose, fp, stdin);
 		will_return(__wrap_fclose, 0);
 
-		will_return(__wrap_freclose, -1);
+		expect_string(__wrap_freopen, path, "/out.log");
+		expect_string(__wrap_freopen, mode, "w");
+		expect_value(__wrap_freopen, stream, stdout);
+		will_return(__wrap_freopen, -1);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		assert_int_equal(become_daemon(config), 6);
 	}
 
 	// fail at second freopen
@@ -139,17 +117,26 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_setsid, 0);
 		will_return(__wrap_fork, 0);
 
-		expect_value(__wrap_chdir, path, '/');
+		expect_string(__wrap_chdir, path, "/");
 		will_return(__wrap_chdir, 0);
 
-		will_return(__wrap_fclose, 0);
-		will_return(__wrap_fclose, 0);
+		expect_value(__wrap_umask, mask, 0);
+		will_return(__wrap_umask, 0);
+
+		expect_value(__wrap_fclose, fp, stdin);
 		will_return(__wrap_fclose, 0);
 
-		will_return(__wrap_freclose, 0);
-		will_return(__wrap_freclose, -1);
+		expect_string(__wrap_freopen, path, "/out.log");
+		expect_string(__wrap_freopen, mode, "w");
+		expect_value(__wrap_freopen, stream, stdout);
+		will_return(__wrap_freopen, stdout);
 
-		assert_int_equal(become_daemon(config), EXIT_FAILURE);
+		expect_string(__wrap_freopen, path, "/out.log");
+		expect_string(__wrap_freopen, mode, "w");
+		expect_value(__wrap_freopen, stream, stderr);
+		will_return(__wrap_freopen, -1);
+
+		assert_int_equal(become_daemon(config), 7);
 	}
 }
 
@@ -163,31 +150,25 @@ void test_become_daemon_success(void **state)
 	will_return(__wrap_setsid, 0);
 	will_return(__wrap_fork, 0);
 
-	expect_value(__wrap_chdir, *path, '/');
+	expect_string(__wrap_chdir, path, "/");
 	will_return(__wrap_chdir, 0);
 
 	expect_value(__wrap_umask, mask, 0);
 	will_return(__wrap_umask, 0);
 
-	expect_value(__wrap_fclose, fp, stdout);
-	will_return(__wrap_fclose, 0);
-
 	expect_value(__wrap_fclose, fp, stdin);
 	will_return(__wrap_fclose, 0);
 
-	expect_value(__wrap_fclose, fp, stderr);
-	will_return(__wrap_fclose, 0);
+	expect_string(__wrap_freopen, path, "/out.log");
+	expect_string(__wrap_freopen, mode, "w");
+	expect_value(__wrap_freopen, stream, stdout);
+	will_return(__wrap_freopen, stdout);
 
-	expect_value(__wrap_freclose, path, "/out.log");
-	expect_value(__wrap_freclose, mode, "w");
-	expect_value(__wrap_freclose, stream, stdout);
-	will_return(__wrap_freclose, stdout);
+	expect_string(__wrap_freopen, path, "/out.log");
+	expect_string(__wrap_freopen, mode, "w");
+	expect_value(__wrap_freopen, stream, stderr);
+	will_return(__wrap_freopen, stderr);
 
-	expect_value(__wrap_freclose, path, "/out.log");
-	expect_value(__wrap_freclose, mode, "w");
-	expect_value(__wrap_freclose, stream, stderr);
-	will_return(__wrap_freclose, stderr);
-
-	assert_int_equal(become_daemon(config), EXIT_SUCCESS);
+	assert_int_equal(become_daemon(config), 0);
 }
 #pragma GCC diagnostic pop
