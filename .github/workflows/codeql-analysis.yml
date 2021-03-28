@@ -46,7 +46,7 @@ jobs:
 
     - name: Install needed dependencies
       # Install the needed libraries to compile the application
-      run: sudo apt update && sudo apt -y install libudev-dev libxkbcommon-dev libxkbcommon-x11-dev
+      run: sudo apt update && sudo apt -y install libcmocka-dev libudev-dev libxkbcommon-dev libxkbcommon-x11-dev
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
