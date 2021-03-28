@@ -1,5 +1,6 @@
 # Ducky Detector Daemon
-This daemon protects from pretty much every HID injection attack.
+This daemon protect aims at detecting and protecting against any rubberducky attacks.
+Currently tested against: Maldruino elite / Bash Bunny
 
 ![CMake](https://github.com/0xDEADC0DEx/duckydd/workflows/CMake/badge.svg?branch=master)
 ![CodeQL](https://github.com/0xDEADC0DEx/duckydd/workflows/CodeQL/badge.svg?branch=master)
@@ -50,7 +51,7 @@ Usage: duckydd [Options]
 ```
 
 __Important Note:__
-THE -v OPTION IS FOR DEBUGGING! 
+THE -v OPTION IS FOR DEBUGGING!
 DISABLE IT IF YOU DON'T NEED IT BECAUSE IT COULD POTENTIALY LOG AND THEIRFORE EXPOSE PASSWORDS!
 
 ## Config entries:
@@ -72,7 +73,7 @@ The so-called "score" of an event file is an internal variable which depicts
 how dangerous the HID device is. If the daemon increments the score over the set maxscore
 and a key is pressed then it will grab the file descriptor that was opened
 and thereby block any further keystrokes from being received by any other program
-that was listening for events. 
+that was listening for events.
 
 At the moment it is incremented if a device:
 with the same major and minor id registers as a input device and a virtual com port.
@@ -131,4 +132,3 @@ If you use systemd you can add the following line to the duckydd service file in
 [Service]
 Environment="XAUTHORITY=/home/<username>/.Xauthority"
 ```
-
