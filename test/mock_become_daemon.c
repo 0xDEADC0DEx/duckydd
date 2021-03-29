@@ -38,7 +38,7 @@ void test_become_daemon_fail(void **state)
 	{
 		will_return(__wrap_fork, -1);
 
-		assert_int_equal(become_daemon(config), 1);
+		assert_int_equal(become_daemon(config), -1);
 	}
 
 	// fail at setsid
@@ -46,7 +46,7 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_fork, 0);
 		will_return(__wrap_setsid, -1);
 
-		assert_int_equal(become_daemon(config), 2);
+		assert_int_equal(become_daemon(config), -2);
 	}
 
 	// fail at second fork
@@ -55,7 +55,7 @@ void test_become_daemon_fail(void **state)
 		will_return(__wrap_setsid, 0);
 		will_return(__wrap_fork, -1);
 
-		assert_int_equal(become_daemon(config), 3);
+		assert_int_equal(become_daemon(config), -3);
 	}
 
 	// fail at chdir
@@ -67,7 +67,7 @@ void test_become_daemon_fail(void **state)
 		expect_string(__wrap_chdir, path, "/");
 		will_return(__wrap_chdir, -1);
 
-		assert_int_equal(become_daemon(config), 4);
+		assert_int_equal(become_daemon(config), -4);
 	}
 
 	// fail at first fclose
@@ -85,7 +85,7 @@ void test_become_daemon_fail(void **state)
 		expect_value(__wrap_fclose, fp, stdin);
 		will_return(__wrap_fclose, -1);
 
-		assert_int_equal(become_daemon(config), 5);
+		assert_int_equal(become_daemon(config), -5);
 	}
 
 	// fail at first freopen
@@ -108,7 +108,7 @@ void test_become_daemon_fail(void **state)
 		expect_value(__wrap_freopen, stream, stdout);
 		will_return(__wrap_freopen, -1);
 
-		assert_int_equal(become_daemon(config), 6);
+		assert_int_equal(become_daemon(config), -6);
 	}
 
 	// fail at second freopen
@@ -136,7 +136,7 @@ void test_become_daemon_fail(void **state)
 		expect_value(__wrap_freopen, stream, stderr);
 		will_return(__wrap_freopen, -1);
 
-		assert_int_equal(become_daemon(config), 7);
+		assert_int_equal(become_daemon(config), -7);
 	}
 }
 

@@ -15,23 +15,23 @@ int become_daemon(struct configInfo config)
 	// fork so that the child is not the process group leader
 	rv = fork();
 	if (rv != 0) {
-		return 1;
+		return -1;
 	}
 
 	// become a process group and session leader
 	if (setsid() == -1) {
-		return 2;
+		return -2;
 	}
 
 	// fork so the child cant regain control of the controlling terminal
 	rv = fork();
 	if (rv != 0) {
-		return 3;
+		return -3;
 	}
 
 	// change base dir
 	if (chdir("/")) {
-		return 4;
+		return -4;
 	}
 
 	// reset file mode creation mask
@@ -39,7 +39,7 @@ int become_daemon(struct configInfo config)
 
 	// close std file descriptors
 	if (fclose(stdin)) {
-		return 5;
+		return -5;
 	}
 
 	{
@@ -50,11 +50,11 @@ int become_daemon(struct configInfo config)
 
 		// log to a file
 		if (freopen(path, "w", stdout) != stdout) {
-			return 6;
+			return -6;
 		}
 
 		if (freopen(path, "w", stderr) != stderr) {
-			return 7;
+			return -7;
 		}
 	}
 	return 0;
