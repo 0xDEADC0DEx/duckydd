@@ -43,4 +43,4 @@ jobs:
             - name: Run cmocka Tests
               working-directory: ${{runner.workspace}}/build
               shell: bash
-              run: duckydd_test
+              run: ./duckydd_test
