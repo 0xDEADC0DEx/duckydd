@@ -1,0 +1,6 @@
+include/config.h
+.cache
+build
+.gdb_history
+Session.vim
+lib/safestringlib
