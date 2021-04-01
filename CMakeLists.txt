@@ -122,6 +122,7 @@ target_link_options (duckydd_test PRIVATE "-Wl,--wrap=umask")
 target_link_options (duckydd_test PRIVATE "-Wl,--wrap=chdir")
 target_link_options (duckydd_test PRIVATE "-Wl,--wrap=fclose")
 target_link_options (duckydd_test PRIVATE "-Wl,--wrap=freopen")
+target_link_options (duckydd_test PRIVATE "-Wl,--wrap=realloc")
 
 target_compile_definitions(duckydd_test PRIVATE RUN_UNIT_TESTS)
 

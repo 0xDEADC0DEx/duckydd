@@ -60,3 +60,14 @@ FILE *__wrap_freopen(const char *path, const char *mode, FILE *stream)
 	check_expected_ptr(stream);
 	return (FILE *)mock();
 }
+
+void *__wrap_realloc(void *ptr, size_t size)
+{
+	if (g_wrap) {
+		check_expected_ptr(ptr);
+		check_expected(size);
+		return (void *)mock();
+	} else {
+		return __real_realloc(ptr, size);
+	}
+}

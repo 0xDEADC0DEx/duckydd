@@ -1,9 +1,16 @@
+#include <stdbool.h>
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <stdint.h>
 
 #include <cmocka.h>
+
+bool g_wrap = false;
+
+void test_mbuffer_fail(void **state);
+void test_mbuffer_success(void **state);
 
 void test_init_signalhandler_fail(void **state);
 void test_init_signalhandler_success(void **state);
@@ -14,6 +21,9 @@ void test_become_daemon_success(void **state);
 int unit_test_main()
 {
 	const struct CMUnitTest tests[] = {
+		cmocka_unit_test(test_mbuffer_fail),
+		cmocka_unit_test(test_mbuffer_success),
+
 		cmocka_unit_test(test_init_signalhandler_fail),
 		cmocka_unit_test(test_init_signalhandler_success),
 
