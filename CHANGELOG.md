@@ -7,7 +7,8 @@ and uses [Keep a Changelog](http://keepachangelog.com/) as a basis.
 ## [Unreleased]
 #### Changed
 - Refactored the project
-
+- Moved config and known issues to github wiki
+- Added tests for most functions
 
 ## [0.3.4] - 2021-02-08
 #### Fixed
