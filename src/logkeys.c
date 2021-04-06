@@ -375,8 +375,8 @@ int init_keylogging(const char input[], struct keyboardInfo *kbd,
 	{
 		char path[PATH_MAX] = { '\0' };
 
-		pathcpy(path, config->logpath);
-		pathcat(path, "/key.log");
+		strcpy_s(path, PATH_MAX, config->logpath);
+		strcat_s(path, PATH_MAX, "/key.log");
 
 		kbd->outfd =
 			open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOCTTY,

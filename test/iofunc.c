@@ -25,4 +25,12 @@ void test_find_file_fail(void **state)
 	assert_ptr_equal(find_file(test), NULL);
 }
 
+void test_parse_long_success(void **state)
+{
+}
+
+void test_parse_long_fail(void **state)
+{
+}
+
 #pragma GCC diagnostic pop

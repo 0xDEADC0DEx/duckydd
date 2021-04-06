@@ -177,7 +177,7 @@ int readconfig(const char path[], struct configInfo *config)
 				struct stat st;
 
 				// path where the logfile will be saved
-				pathcpy(config->logpath, &buff[8]);
+				strcpy_s(config->logpath, PATH_MAX, &buff[8]);
 
 				if (stat(config->logpath, &st) < 0) {
 					if (errno == ENOENT) {
@@ -294,24 +294,6 @@ int handleargs(int argc, char *argv[], struct argInfo *data)
 		return -1;
 	}
 	return 0;
-}
-
-errno_t pathcat(char path1[], const char path2[])
-{
-	if (strnlen_s(path1, PATH_MAX) + strnlen_s(path2, PATH_MAX) <
-	    PATH_MAX) {
-		return strcat_s(path1, PATH_MAX, path2);
-	}
-	return EINVAL;
-}
-
-errno_t pathcpy(char path1[], const char path2[])
-{
-	if (strnlen_s(path1, PATH_MAX) + strnlen_s(path2, PATH_MAX) <
-	    PATH_MAX) {
-		return strcpy_s(path1, PATH_MAX, path2);
-	}
-	return EINVAL;
 }
 
 // returns the filename from a path

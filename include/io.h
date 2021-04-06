@@ -33,8 +33,5 @@ int handleargs(int argc, char* argv[], struct argInfo* data);
 // internal logger function
 char* binexpand(uint8_t bin, size_t size);
 
-errno_t pathcat(char path1[], const char path2[]);
-errno_t pathcpy(char path1[], const char path2[]);
-
 const char* find_file(const char* input);
 #endif

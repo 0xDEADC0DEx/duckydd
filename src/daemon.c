@@ -45,8 +45,8 @@ int become_daemon(struct configInfo config)
 	{
 		char path[PATH_MAX] = { '\0' };
 
-		pathcpy(path, config.logpath);
-		pathcat(path, "/out.log");
+		strcpy_s(path, PATH_MAX, config.logpath);
+		strcat_s(path, PATH_MAX, "/out.log");
 
 		// log to a file
 		if (freopen(path, "w", stdout) != stdout) {
