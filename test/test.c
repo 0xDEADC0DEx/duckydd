@@ -9,6 +9,9 @@
 
 bool g_wrap = false;
 
+void test_find_file_fail(void **state);
+void test_find_file_success(void **state);
+
 void test_mbuffer_fail(void **state);
 void test_mbuffer_success(void **state);
 
@@ -21,6 +24,9 @@ void test_become_daemon_success(void **state);
 int unit_test_main()
 {
 	const struct CMUnitTest tests[] = {
+		cmocka_unit_test(test_find_file_fail),
+		cmocka_unit_test(test_find_file_success),
+
 		cmocka_unit_test(test_mbuffer_fail),
 		cmocka_unit_test(test_mbuffer_success),
 
