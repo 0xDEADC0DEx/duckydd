@@ -25,20 +25,4 @@ void test_find_file_fail(void **state)
 	assert_ptr_equal(find_file(test), NULL);
 }
 
-void test_strcmp_ss_success(void **state)
-{
-}
-
-void test_strcmp_ss_fail(void **state)
-{
-}
-
-void test_strncmp_ss_success(void **state)
-{
-}
-
-void test_strncmp_ss_fail(void **state)
-{
-}
-
 #pragma GCC diagnostic pop

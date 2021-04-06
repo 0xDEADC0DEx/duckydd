@@ -107,8 +107,8 @@ int search_fd(struct managedBuffer *device, const char location[])
 		size_t i;
 
 		for (i = 0; i < device->size; i++) { // find the fd in the array
-			if (strcmp_ss(m_deviceInfo(device)[i].openfd,
-				      location) == 0 &&
+			if (strcmp_s(m_deviceInfo(device)[i].openfd, PATH_MAX,
+				     location, 0) == 0 &&
 			    m_deviceInfo(device)[i].fd != -1) {
 				return i;
 			}
@@ -316,7 +316,7 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 		    udev_device_get_property_value(udev->dev, "MINOR"));
 
 		// add the devnode to the array
-		if (strncmp_ss(action, "add", 3) == 0) {
+		if (strncmp(action, "add", 3) == 0) {
 			int fd;
 
 			fd = add_fd(device, kbd, config, epollfd, devnode);
@@ -331,7 +331,7 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 			}
 
 			// remove the fd from the device array
-		} else if (strncmp_ss(action, "remove", 6) == 0) {
+		} else if (strncmp(action, "remove", 6) == 0) {
 			int fd;
 
 			// search for the fd and remove it if possible

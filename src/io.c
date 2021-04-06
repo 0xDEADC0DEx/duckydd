@@ -141,7 +141,7 @@ int readconfig(const char path[], struct configInfo *config)
 			}
 
 			// gets the minimal average time difference between keystrokes
-			if (strncmp_ss(buff, "minavrg", 6) == 0) {
+			if (strncmp(buff, "minavrg", 6) == 0) {
 				char *end = NULL;
 
 				config->minavrg.tv_sec =
@@ -160,7 +160,7 @@ int readconfig(const char path[], struct configInfo *config)
 				    config->minavrg.tv_sec,
 				    config->minavrg.tv_nsec);
 
-			} else if (strncmp_ss(buff, "maxscore", 7) == 0) {
+			} else if (strncmp(buff, "maxscore", 7) == 0) {
 				// sets the max score at which the device will be locked
 				config->maxcount = parse_long(&buff[9], NULL);
 
@@ -173,7 +173,7 @@ int readconfig(const char path[], struct configInfo *config)
 				LOG(1, "Maxscore set to %ld\n",
 				    config->maxcount);
 
-			} else if (strncmp_ss(buff, "logpath", 6) == 0) {
+			} else if (strncmp(buff, "logpath", 6) == 0) {
 				struct stat st;
 
 				// path where the logfile will be saved
@@ -206,7 +206,7 @@ int readconfig(const char path[], struct configInfo *config)
 						return -8;
 					}
 				}
-			} else if (strncmp_ss(buff, "usexkeymaps", 10) == 0) {
+			} else if (strncmp(buff, "usexkeymaps", 10) == 0) {
 				// enables the use of x server keymaps if they are available
 				if (parse_long(&buff[12], NULL) == 1) {
 					config->xkeymaps = true;
@@ -312,35 +312,6 @@ errno_t pathcpy(char path1[], const char path2[])
 		return strcpy_s(path1, PATH_MAX, path2);
 	}
 	return EINVAL;
-}
-
-// memsave strcmp functions
-int strcmp_ss(const char str1[], const char str2[])
-{
-	size_t i = 0;
-
-	while (str1[i] == str2[i]) {
-		if (str1[i] == '\0' || str2[i] == '\0') {
-			break;
-		}
-		i++;
-	}
-
-	return str1[i] - str2[i];
-}
-
-int strncmp_ss(const char str1[], const char str2[], size_t length)
-{
-	size_t i = 0;
-
-	while (str1[i] == str2[i] && i < length) {
-		if (str1[i] == '\0' || str2[i] == '\0') {
-			break;
-		}
-		i++;
-	}
-
-	return str1[i] - str2[i];
 }
 
 // returns the filename from a path

@@ -36,9 +36,5 @@ char* binexpand(uint8_t bin, size_t size);
 errno_t pathcat(char path1[], const char path2[]);
 errno_t pathcpy(char path1[], const char path2[]);
 
-// better strcmp implementations
-int strcmp_ss(const char str1[], const char str2[]);
-int strncmp_ss(const char str1[], const char str2[], size_t length);
-
 const char* find_file(const char* input);
 #endif

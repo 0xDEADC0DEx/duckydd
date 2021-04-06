@@ -54,8 +54,8 @@ int has_tty(struct udevInfo udev)
 
 		// find ttyACM or ttyUSB devices
 		strcpy_s(temp, 6, find_file(udev_list_entry_get_name(le)));
-		if (strncmp_ss(temp, "ttyACM", 6) == 0 ||
-		    strncmp_ss(temp, "ttyUSB", 6) == 0) {
+		if (strncmp(temp, "ttyACM", 6) == 0 ||
+		    strncmp(temp, "ttyUSB", 6) == 0) {
 			udev_enumerate_unref(en);
 			return 1;
 		}
