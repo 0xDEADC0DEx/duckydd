@@ -17,7 +17,6 @@ endif ()
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 
 project(duckydd C)
-set(CMAKE_C_STANDARD 99)
 
 # Set path variables for installation
 set (INSTALL_DIR "/usr/bin")
@@ -30,11 +29,13 @@ file (GLOB APP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
 file (GLOB TEST_SOURCES "${CMAKE_SOURCE_DIR}/test/*.c")
 
 add_executable(duckydd ${APP_SOURCES})
+set_property(TARGET duckydd PROPERTY C_STANDARD 11)
+set_property(TARGET duckydd PROPERTY C_STANDARD_REQUIRED ON)
 
 # Set compile flags
 set (CMAKE_C_FLAGS_DEBUG "-g")
 set (CMAKE_C_FLAGS_RELEASE "-O3 -fpie -D_FORTIFY_SOURCE=2")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fstack-protector-strong")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -fstack-protector-strong")
 
 # Options
 option(ENABLE_XKB_EXTENSION "Enable linking to xkbcommon" ON)
@@ -114,6 +115,8 @@ find_library(CMOCKA_LIB libcmocka.so)
 
 add_executable(duckydd_test ${APP_SOURCES} ${TEST_SOURCES})
 add_dependencies(duckydd_test duckydd safestringlib safestringlib_download)
+set_property(TARGET duckydd_test PROPERTY C_STANDARD 11)
+set_property(TARGET duckydd_test PROPERTY C_STANDARD_REQUIRED ON)
 
 target_link_options (duckydd_test PRIVATE "-Wl,--wrap=sigaction")
 target_link_options (duckydd_test PRIVATE "-Wl,--wrap=fork")
