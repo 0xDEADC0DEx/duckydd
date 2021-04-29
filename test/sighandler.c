@@ -25,7 +25,7 @@ void test_init_signalhandler_success(void **state)
 		expect_in_set(__wrap_sigaction, signum, signals);
 	}
 
-	//TODO expect_value doesnt register value as a parameter check (bug???)
+	//TODO expect_value doesn't register value as a parameter check (bug???)
 	/*for (i = 0; i < 3; i++) {
 		expect_value(__wrap_sigaction, act->sa_handler, handle_signal);
 	}

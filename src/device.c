@@ -122,6 +122,7 @@ int remove_fd(struct managedBuffer *device, struct configInfo *config,
 {
 	int rv;
 
+	LOG(1, "Trying to remove %d\n", fd);
 	if (fd > -1) {
 		rv = deinit_device(&m_deviceInfo(device)[fd], config, kbd,
 				   epollfd);
@@ -165,7 +166,7 @@ int remove_fd(struct managedBuffer *device, struct configInfo *config,
 		}
 
 	} else {
-		LOG(1, "Did not find %d\n", fd);
+		LOG(-1, "Did not find %d\n", fd);
 		return -2;
 	}
 
