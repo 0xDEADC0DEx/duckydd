@@ -49,7 +49,7 @@ static int open_console0()
 	for (i = 0; i < conpath_size; i++) {
 		int fd;
 
-		fd = open(conpath[i], O_NOCTTY | O_RDONLY);
+		fd = open(conpath[i], O_NOCTTY | O_RDONLY | O_NOFOLLOW);
 		if (fd >= 0) {
 			char ioctlarg;
 
@@ -75,7 +75,7 @@ static int open_console0()
 static int load_x_keymaps(const char screen[], struct keyboardInfo *kbd,
 			  struct configInfo *config)
 {
-	int rv;
+	ssize_t rv;
 	int err = 0;
 
 	// initalize x keymap
@@ -158,8 +158,8 @@ error_exit:
 
 static int load_kernel_keymaps(const int fd, struct keyboardInfo *kbd)
 {
-	int rv;
-	size_t i, k;
+	ssize_t rv;
+	unsigned int i, k;
 
 	// load scancode to keycode table
 	for (i = 0; i < MAX_SIZE_SCANCODE; i++) {
@@ -180,37 +180,41 @@ static int load_kernel_keymaps(const int fd, struct keyboardInfo *kbd)
 	// load keycode to actioncode table
 	for (i = 0; i < MAX_NR_KEYMAPS; i++) {
 		for (k = 0; k < NR_KEYS; k++) {
-			struct kbentry temp;
+			if (i < CHAR_MAX && k < CHAR_MAX) {
+				struct kbentry temp;
 
-			temp.kb_table = i;
-			temp.kb_index = k;
-			temp.kb_value = 0;
+				temp.kb_table = (unsigned char)i;
+				temp.kb_index = (unsigned char)k;
+				temp.kb_value = 0;
 
-			rv = ioctl(fd, KDGKBENT, &temp);
-			if (rv) {
-				ERR("ioctl");
-				return -2;
+				rv = ioctl(fd, KDGKBENT, &temp);
+				if (rv) {
+					ERR("ioctl");
+					return -2;
+				}
+
+				kbd->k.actioncode[i][k] = temp.kb_value;
 			}
-
-			kbd->k.actioncode[i][k] = temp.kb_value;
 		}
 	}
 
 	// loads actioncode to string table
 	for (i = 0; i < MAX_NR_FUNC; i++) {
-		struct kbsentry temp;
+		if (i < CHAR_MAX) {
+			struct kbsentry temp;
 
-		temp.kb_func = i;
-		temp.kb_string[0] = '\0';
+			temp.kb_func = (unsigned char)i;
+			temp.kb_string[0] = '\0';
 
-		rv = ioctl(fd, KDGKBSENT, &temp);
-		if (rv) {
-			ERR("ioctl");
-			return -3;
+			rv = ioctl(fd, KDGKBSENT, &temp);
+			if (rv) {
+				ERR("ioctl");
+				return -3;
+			}
+
+			memcpy_s(kbd->k.string[i], MAX_SIZE_KBSTRING,
+				 temp.kb_string, MAX_SIZE_KBSTRING);
 		}
-
-		memcpy_s(kbd->k.string[i], MAX_SIZE_KBSTRING, temp.kb_string,
-			 MAX_SIZE_KBSTRING);
 	}
 
 	return 0;
@@ -222,7 +226,7 @@ static int interpret_keycode(struct managedBuffer *buff,
 			     struct keyboardInfo *kbd, unsigned int code,
 			     uint8_t value)
 {
-	int rv;
+	ssize_t rv;
 	uint16_t modmask = 0;
 
 	LOG(2, "keycode:%d value:%d - typ:%d val:%d\n", code, value, KTYP(code),
@@ -333,7 +337,7 @@ static int interpret_keycode(struct managedBuffer *buff,
 int init_keylogging(const char input[], struct keyboardInfo *kbd,
 		    struct configInfo *config)
 {
-	int rv;
+	ssize_t rv;
 	int err = 0;
 
 	// setup x keymaps
@@ -380,7 +384,7 @@ int init_keylogging(const char input[], struct keyboardInfo *kbd,
 
 		kbd->outfd =
 			open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOCTTY,
-			     S_IRUSR | S_IWUSR);
+			     S_IRUSR | S_IWUSR | O_NOFOLLOW);
 		if (kbd->outfd < 0) {
 			ERR("open");
 			err = -3;
@@ -427,7 +431,7 @@ static inline void timespec_diff(struct timespec *result, struct timespec *a,
 
 static int check_if_evil(struct deviceInfo *device, struct configInfo *config)
 {
-	int rv;
+	ssize_t rv;
 
 	// increment currdiff until wraparound
 	if (device->timediff.currdiff < device->timediff.strokesdiff.size) {
@@ -454,7 +458,8 @@ static int check_if_evil(struct deviceInfo *device, struct configInfo *config)
 
 		// if the queue is filled then use it to calculate the average difference
 		if (device->timediff.currdiff ==
-		    device->timediff.strokesdiff.size - 1) {
+			    device->timediff.strokesdiff.size - 1 &&
+		    device->timediff.strokesdiff.size > 0) {
 			size_t i;
 			struct timespec sum;
 
@@ -496,7 +501,7 @@ static int check_if_evil(struct deviceInfo *device, struct configInfo *config)
 int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 	   struct input_event event, struct configInfo *config)
 {
-	int rv;
+	ssize_t rv;
 #ifdef ENABLE_XKB_EXTENSION
 	// if xkbcommon lib has initalized
 	if (config->xkeymaps) {

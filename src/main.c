@@ -41,7 +41,7 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 	 struct keyboardInfo *kbd, struct managedBuffer *device, int *epollfd,
 	 struct epoll_event *udevevent)
 {
-	int rv;
+	ssize_t rv;
 
 	// reset global variables
 	g_brexit = false;
@@ -113,7 +113,7 @@ int init(char configpath[], struct udevInfo *udev, struct configInfo *config,
 #ifndef RUN_UNIT_TESTS
 int main(int argc, char *argv[])
 {
-	int rv;
+	ssize_t rv;
 	struct argInfo arg;
 	struct udevInfo udev;
 	struct configInfo config;

@@ -32,7 +32,7 @@
 int deinit_device(struct deviceInfo *device, struct configInfo *config,
 		  struct keyboardInfo *kbd, const int epollfd)
 {
-	int rv;
+	long int rv;
 	int err = 0;
 
 	if (device->fd != -1) {
@@ -104,7 +104,7 @@ int search_fd(struct managedBuffer *device, const char location[])
 	LOG(1, "Searching for: %s\n", location);
 
 	if (location != NULL) {
-		size_t i;
+		int i;
 
 		for (i = 0; i < device->size; i++) { // find the fd in the array
 			if (strcmp_s(m_deviceInfo(device)[i].openfd, PATH_MAX,
@@ -120,7 +120,7 @@ int search_fd(struct managedBuffer *device, const char location[])
 int remove_fd(struct managedBuffer *device, struct configInfo *config,
 	      struct keyboardInfo *kbd, const int epollfd, const int fd)
 {
-	int rv;
+	ssize_t rv;
 
 	LOG(1, "Trying to remove %d\n", fd);
 	if (fd > -1) {
@@ -178,7 +178,7 @@ int remove_fd(struct managedBuffer *device, struct configInfo *config,
 int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 	   struct configInfo *config, const int epollfd, const char location[])
 {
-	int rv;
+	ssize_t rv;
 	int err = 0;
 	int fd;
 
@@ -292,7 +292,7 @@ int handle_udevev(struct managedBuffer *device, struct keyboardInfo *kbd,
 		  struct configInfo *config, struct udevInfo *udev,
 		  const int epollfd)
 {
-	int rv;
+	ssize_t rv;
 	int err = 0;
 	const char *devnode;
 	const char *action;

@@ -8,7 +8,7 @@
 
 int has_tty(struct udevInfo udev)
 {
-	int rv;
+	ssize_t rv;
 	int err = 0;
 	struct udev_enumerate *en;
 	struct udev_list_entry *le;
@@ -69,7 +69,7 @@ error_exit:
 
 int init_udev(struct udevInfo *udev)
 {
-	int rv;
+	ssize_t rv;
 
 	udev->udev = udev_new();
 	if (udev->udev == NULL) {

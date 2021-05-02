@@ -28,7 +28,7 @@ void handle_signal(int signal)
 
 int init_signalhandler()
 {
-	int rv;
+	ssize_t rv;
 	struct sigaction action;
 
 	action.sa_handler = handle_signal;

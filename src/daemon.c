@@ -10,7 +10,7 @@
 
 int become_daemon(struct configInfo config)
 {
-	int rv;
+	ssize_t rv;
 
 	// fork so that the child is not the process group leader
 	rv = fork();

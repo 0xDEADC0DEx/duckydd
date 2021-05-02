@@ -78,7 +78,7 @@ static long int parse_long(const char input[], char **end)
 
 int readconfig(const char path[], struct configInfo *config)
 {
-	int rv;
+	ssize_t rv;
 	int fd;
 
 	config->maxcount = -1;
@@ -88,7 +88,7 @@ int readconfig(const char path[], struct configInfo *config)
 	config->minavrg.tv_nsec = 0;
 
 	// open the config file if it has no lock on it
-	fd = open(path, O_RDWR); // open the config
+	fd = open(path, O_RDWR | O_NOFOLLOW); // open the config
 	if (fd < 0) {
 		ERR(fd);
 		return -1;
