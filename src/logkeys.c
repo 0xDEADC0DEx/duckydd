@@ -518,22 +518,30 @@ int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 			xkb_state_update_key(device->xstate, keycode,
 					     XKB_KEY_UP);
 		} else {
-			size_t size;
+			size_t size = 0;
 
 			xkb_state_update_key(device->xstate, keycode,
 					     XKB_KEY_DOWN);
 
 			// get the size of the required buffer
-			size = xkb_state_key_get_utf8(device->xstate, keycode,
-						      NULL, 0) +
-			       1;
+			rv = xkb_state_key_get_utf8(device->xstate, keycode,
+						    NULL, 0) +
+			     1;
+
+			if (rv >= 0) {
+				size = (size_t)rv;
+			} else {
+				ERR("xkb_state_key_get_utf8");
+				return -1;
+			}
+
 			if (size > 1) {
 				char *buffer;
 
 				buffer = malloc(size);
 				if (buffer == NULL) {
 					ERR("malloc");
-					return -1;
+					return -2;
 				}
 
 				// get the buffers
@@ -545,7 +553,7 @@ int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 				if (rv) { // dont copy \0
 					ERR(rv);
 					free(buffer);
-					return -2;
+					return -3;
 				}
 				free(buffer);
 
@@ -564,7 +572,7 @@ int logkey(struct keyboardInfo *kbd, struct deviceInfo *device,
 				       event.value);
 		if (rv) {
 			ERR(rv);
-			return -3;
+			return -4;
 		}
 	}
 
