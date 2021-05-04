@@ -134,7 +134,9 @@ int readconfig(const char path[], struct configInfo *config)
 					lseek(fd, i + 1 - rv, SEEK_CUR);
 
 					// cleanup string
-					cleaninput(buff, i);
+					if (i >= 0) {
+						cleaninput(buff, (size_t)i);
+					}
 					LOG(2, "-> %s rv: %d\n", buff, rv);
 					break;
 				}

@@ -103,10 +103,11 @@ int search_fd(struct managedBuffer *device, const char location[])
 {
 	LOG(1, "Searching for: %s\n", location);
 
-	if (location != NULL) {
+	if (location != NULL && device->size < INT_MAX) {
 		int i;
 
-		for (i = 0; i < device->size; i++) { // find the fd in the array
+		for (i = 0; i < (int)device->size;
+		     i++) { // find the fd in the array
 			if (strcmp_s(m_deviceInfo(device)[i].openfd, PATH_MAX,
 				     location, 0) == 0 &&
 			    m_deviceInfo(device)[i].fd != -1) {
@@ -193,12 +194,12 @@ int add_fd(struct managedBuffer *device, struct keyboardInfo *kbd,
 	}
 
 	// allocate more space if the fd doesn't fit
-	if (device->size <= (size_t)fd) {
+	if (device->size <= (size_t)fd && fd >= 0) {
 		size_t i;
 		size_t prevsize;
 
 		prevsize = device->size;
-		rv = m_realloc(device, fd + 1);
+		rv = m_realloc(device, (size_t)fd + 1);
 		if (rv) {
 			ERR(rv);
 			err = -2;

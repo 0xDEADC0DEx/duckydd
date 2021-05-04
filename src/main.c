@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 
 				} else {
 					struct input_event event;
-					int16_t size;
+					ssize_t size;
 
 					size = read(fd, &event,
 						    sizeof(struct input_event));
