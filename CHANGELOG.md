@@ -8,7 +8,7 @@ and uses [Keep a Changelog](http://keepachangelog.com/) as a basis.
 #### Changed
 - Refactored the project
 - Moved config and known issues to github wiki
-- Added tests for most functions
+- Added tests for most user input handling functions
 
 ## [0.3.4] - 2021-02-08
 #### Fixed
