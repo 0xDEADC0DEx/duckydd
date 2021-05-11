@@ -108,8 +108,8 @@ int search_fd(struct managedBuffer *device, const char location[])
 
 		for (i = 0; i < (int)device->size;
 		     i++) { // find the fd in the array
-			if (strcmp_s(m_deviceInfo(device)[i].openfd, PATH_MAX,
-				     location, 0) == 0 &&
+			if (strncmp(m_deviceInfo(device)[i].openfd, location,
+				    PATH_MAX) == 0 &&
 			    m_deviceInfo(device)[i].fd != -1) {
 				return i;
 			}
