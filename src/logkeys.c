@@ -379,15 +379,22 @@ int init_keylogging(const char input[], struct keyboardInfo *kbd,
 	{
 		char path[PATH_MAX] = { '\0' };
 
-		strcpy_s(path, PATH_MAX, config->logpath);
-		strcat_s(path, PATH_MAX, "/key.log");
+		if (strcpy_s(path, PATH_MAX, config->logpath) != EOK) {
+			err = -3;
+			goto error_exit;
+		}
+
+		if (strcat_s(path, PATH_MAX, "/key.log") != EOK) {
+			err = -4;
+			goto error_exit;
+		}
 
 		kbd->outfd =
 			open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOCTTY,
 			     S_IRUSR | S_IWUSR | O_NOFOLLOW);
 		if (kbd->outfd < 0) {
 			ERR("open");
-			err = -3;
+			err = -5;
 			goto error_exit;
 		}
 	}
