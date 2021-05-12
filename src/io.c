@@ -236,8 +236,10 @@ int handleargs(int argc, char *argv[], struct argInfo *data)
 			// path to the config to be used
 			case 'c':
 				if (i + 1 < argc) {
-					strcpy_s(data->configpath, PATH_MAX,
-						 argv[i + 1]); // config path
+					if (strcpy_s(data->configpath, PATH_MAX,
+						     argv[i + 1]) != EOK) {
+						return -1;
+					}
 				}
 				break;
 
@@ -290,10 +292,10 @@ int handleargs(int argc, char *argv[], struct argInfo *data)
 	}
 
 	if (help) {
-		return -1;
+		return -2;
 	} else if (data->configpath[0] == '\0') {
 		LOG(0, "Please provide a config location!\n");
-		return -1;
+		return -3;
 	}
 	return 0;
 }
