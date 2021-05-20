@@ -260,20 +260,21 @@ int handleargs(int argc, char *argv[], struct argInfo *data)
 
 			// shows help
 			case 'h':
-				printf("duckydd %s\n"
-				       "Usage: duckydd [Options]\n"
-				       "\t\t-c <file>\tSpecify a config file path\n"
-				       "\t\t-d\t\tDaemonize the process\n"
-				       "\t\t-v\t\tIncrease verbosity of the console output (The maximum verbosity is 2)\n"
-				       "\t\t\t\tTHE -v OPTION CAN POTENTIALY EXPOSE PASSWORDS!!!\n"
-				       "\t\t-h\t\tShows this help section\n\n"
-				       "For config options please have a look at the README.md\n"
-				       "The daemon was linked against: udev "
+				LOG(0,
+				    "duckydd %s\n"
+				    "Usage: duckydd [Options]\n"
+				    "\t\t-c <file>\tSpecify a config file path\n"
+				    "\t\t-d\t\tDaemonize the process\n"
+				    "\t\t-v\t\tIncrease verbosity of the console output (The maximum verbosity is 2)\n"
+				    "\t\t\t\tTHE -v OPTION CAN POTENTIALY EXPOSE PASSWORDS!!!\n"
+				    "\t\t-h\t\tShows this help section\n\n"
+				    "For config options please have a look at the README.md\n"
+				    "The daemon was linked against: udev "
 #ifdef ENABLE_XKB_EXTENSION
-				       "xkbcommon xkbcommon-x11 xcb "
+				    "xkbcommon xkbcommon-x11 xcb "
 #endif
-				       "\n",
-				       GIT_VERSION);
+				    "\n",
+				    GIT_VERSION);
 				help = true;
 				break;
 
