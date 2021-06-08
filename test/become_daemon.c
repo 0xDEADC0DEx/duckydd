@@ -108,7 +108,7 @@ void test_become_daemon_fail(void **state)
 		expect_value(__wrap_freopen, stream, stdout);
 		will_return(__wrap_freopen, -1);
 
-		assert_int_equal(become_daemon(config), -6);
+		assert_int_equal(become_daemon(config), -8);
 	}
 
 	// fail at second freopen
@@ -136,7 +136,7 @@ void test_become_daemon_fail(void **state)
 		expect_value(__wrap_freopen, stream, stderr);
 		will_return(__wrap_freopen, -1);
 
-		assert_int_equal(become_daemon(config), -7);
+		assert_int_equal(become_daemon(config), -9);
 	}
 }
 
